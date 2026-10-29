@@ -1,0 +1,10 @@
+[project]
+name = "inverter-12kw-sim"
+version = "0.1.0"
+description = "Switching-level simulation of a 12 kW three-phase inverter and boost front end, with loss models"
+requires-python = ">=3.10"
+dependencies = ["numpy", "scipy", "matplotlib"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["spice: runs ngspice (native or docker)"]

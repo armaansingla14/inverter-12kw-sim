@@ -1,0 +1,26 @@
+* boost2: interleaved boost cross-check deck (switched-pole model)
+Vin in 0 dc 400.0
+Cout out 0 0.00047 ic=700.0
+Rload out 0 40.833333333333336
+Vg0 g0 0 pulse(0 1 0 10n 10n 8.614e-06 2e-05)
+Vi0 in m0 dc 0
+L0 m0 x0 0.0004 ic=15.0
+RL0 x0 sw0 0.025
+Bsw0 sw0 0 v = (1 - v(g0))*v(out) + 0.06*i(Vi0)
+Bo0 0 out i = (1 - v(g0))*i(Vi0)
+Vg1 g1 0 pulse(0 1 1e-05 10n 10n 8.614e-06 2e-05)
+Vi1 in m1 dc 0
+L1 m1 x1 0.0004 ic=15.0
+RL1 x1 sw1 0.025
+Bsw1 sw1 0 v = (1 - v(g1))*v(out) + 0.06*i(Vi1)
+Bo1 0 out i = (1 - v(g1))*i(Vi1)
+.options method=gear reltol=1e-3 abstol=1e-6 vntol=1e-4
+.control
+set wr_vecnames
+set wr_singlescale
+tran 5e-08 0.03 0.029 5e-08 uic
+let il0 = i(Vi0)
+let il1 = i(Vi1)
+wrdata boost2.dat v(out) il0 il1
+.endc
+.end

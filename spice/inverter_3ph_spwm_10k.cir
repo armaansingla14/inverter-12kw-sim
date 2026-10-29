@@ -1,0 +1,45 @@
+* inv_spwm: three-phase inverter cross-check deck (switched-pole model)
+Vs src 0 dc 700.0
+Rs src s1 0.05
+Ls s1 s2 2e-05
+Visrc s2 p dc 0
+Cdc p 0 0.00047 ic=700.0
+Vtri tri 0 pulse(-1 1 0 5e-05 5e-05 1e-12 0.0001)
+Bsa sa 0 v = 0.9*cos(2*pi*50.0*time)
+Bsb sb 0 v = 0.9*cos(2*pi*50.0*time - 2*pi/3)
+Bsc sc 0 v = 0.9*cos(2*pi*50.0*time + 2*pi/3)
+Bz zs 0 v = 0
+Bga ga 0 v = 0.5*(1 + tanh(2000.0*(v(sa) - v(zs) - v(tri))))
+Bpa oa 0 v = v(p)*v(ga) - 0.03*i(Via)
+Via oa ma dc 0
+La ma xa 0.0025 ic=0
+RLa xa fa 0.03
+Ca fa n 1e-05 ic=0
+Ra fa n 13.333333333333336
+Bgb gb 0 v = 0.5*(1 + tanh(2000.0*(v(sb) - v(zs) - v(tri))))
+Bpb ob 0 v = v(p)*v(gb) - 0.03*i(Vib)
+Vib ob mb dc 0
+Lb mb xb 0.0025 ic=0
+RLb xb fb 0.03
+Cb fb n 1e-05 ic=0
+Rb fb n 13.333333333333336
+Bgc gc 0 v = 0.5*(1 + tanh(2000.0*(v(sc) - v(zs) - v(tri))))
+Bpc oc 0 v = v(p)*v(gc) - 0.03*i(Vic)
+Vic oc mc dc 0
+Lc mc xc 0.0025 ic=0
+RLc xc fc 0.03
+Cc fc n 1e-05 ic=0
+Rc fc n 13.333333333333336
+Bdc p 0 i = v(ga)*i(Via) + v(gb)*i(Vib) + v(gc)*i(Vic)
+.options method=gear reltol=1e-3 abstol=1e-6 vntol=1e-4
+.control
+set wr_vecnames
+set wr_singlescale
+tran 2e-07 0.1 0.08 2e-07 uic
+let vfa = v(fa) - v(n)
+let vfb = v(fb) - v(n)
+let isrc = i(Visrc)
+let ila = i(Via)
+wrdata inv_spwm.dat vfa vfb isrc v(p) ila
+.endc
+.end

@@ -1,0 +1,55 @@
+* 12 kW three-phase inverter, SPWM, 10 kHz (LTspice syntax, not run here)
+.param Vdc=700 fsw=10k f1=50 m=0.966 td=1u
+.param Lf=2.5m Cf=10u Rload=13.333
+Vdc p 0 {Vdc}
+Cdc p 0 470u IC={Vdc}
+Vtri tri 0 PULSE(-1 1 0 {0.5/fsw} {0.5/fsw} 0 {1/fsw})
+* references
+Bra ra 0 V={m}*cos(2*pi*{f1}*time)
+Brb rb 0 V={m}*cos(2*pi*{f1}*time-2*pi/3)
+Brc rc 0 V={m}*cos(2*pi*{f1}*time+2*pi/3)
+* comparators with dead time (RC delay on the rising edge via diode trick)
+.subckt gatedrv ref tri gh gl
+Bcmp c 0 V=if(V(ref)>V(tri),1,0)
+Rd c ch 1k
+Dd ch c dfast
+Cd ch 0 {td/1k}
+Bh gh 0 V=if(V(ch)>0.63 & V(c)>0.5,15,0)
+Bnc nc 0 V=1-V(c)
+Rd2 nc nch 1k
+Dd2 nch nc dfast
+Cd2 nch 0 {td/1k}
+Bl gl 0 V=if(V(nch)>0.63 & V(nc)>0.5,15,0)
+.model dfast D(Ron=1m Roff=1G Vfwd=0)
+.ends
+.model SWI SW(Ron=28m Roff=1Meg Vt=7.5 Vh=-1)
+.model DFR D(Ron=22m Vfwd=1.0 Roff=1Meg)
+Xga ra tri gha gla gatedrv
+Xgb rb tri ghb glb gatedrv
+Xgc rc tri ghc glc gatedrv
+S1 p oa gha 0 SWI
+S2 oa 0 gla 0 SWI
+D1 oa p DFR
+D2 0 oa DFR
+S3 p ob ghb 0 SWI
+S4 ob 0 glb 0 SWI
+D3 ob p DFR
+D4 0 ob DFR
+S5 p oc ghc 0 SWI
+S6 oc 0 glc 0 SWI
+D5 oc p DFR
+D6 0 oc DFR
+La oa fa {Lf} Rser=30m
+Lb ob fb {Lf} Rser=30m
+Lc oc fc {Lf} Rser=30m
+Ca fa n {Cf}
+Cb fb n {Cf}
+Cc fc n {Cf}
+Ra fa n {Rload}
+Rb fb n {Rload}
+Rc fc n {Rload}
+.tran 0 100m 60m 0.2u
+.four 50 49 V(fa,n)
+.meas TRAN Pout AVG (V(fa,n)*I(Ra)+V(fb,n)*I(Rb)+V(fc,n)*I(Rc)) FROM 60m TO 100m
+.meas TRAN Pin AVG -V(p)*I(Vdc) FROM 60m TO 100m
+.end
